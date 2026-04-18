@@ -34,18 +34,18 @@ function ask(question) {
 async function initProfiles() {
   fs.mkdirSync(PROFILES_DIR, { recursive: true });
 
-  console.log("Первый запуск — настройка профиля GLM 5.1.\n");
-  const token = await ask("Введи API-ключ для ZhipuAI: ");
+  console.log("First run — setting up GLM 5.1 profile.\n");
+  const token = await ask("Enter ZhipuAI API key: ");
 
   if (!token) {
-    console.error("Токен не указан. Прерываю.");
+    console.error("No API key provided. Aborting.");
     process.exit(1);
   }
 
   DEFAULT_PROFILES.glm.env.ANTHROPIC_AUTH_TOKEN = token;
 
   fs.writeFileSync(PROFILES_PATH, JSON.stringify(DEFAULT_PROFILES, null, 2) + "\n");
-  console.log(`\nКонфиг создан: ${PROFILES_PATH}`);
+  console.log(`\nConfig created: ${PROFILES_PATH}`);
 }
 
 function loadProfiles() {
@@ -74,10 +74,10 @@ function writeSettings(settings) {
 
 function status(profiles) {
   const settings = readSettings();
-  const model = settings.model || "не указана";
-  const baseUrl = settings.env?.ANTHROPIC_BASE_URL || "Anthropic API (по умолчанию)";
+  const model = settings.model || "not set";
+  const baseUrl = settings.env?.ANTHROPIC_BASE_URL || "Anthropic API (default)";
 
-  let profileName = "неизвестный";
+  let profileName = "unknown";
   for (const [name, profile] of Object.entries(profiles)) {
     if (profile.model === model) {
       profileName = name;
@@ -85,15 +85,15 @@ function status(profiles) {
     }
   }
 
-  console.log(`Модель:     ${model}`);
-  console.log(`Профиль:    ${profileName}`);
+  console.log(`Model:      ${model}`);
+  console.log(`Profile:    ${profileName}`);
   console.log(`API:        ${baseUrl}`);
 }
 
 function switchProfile(profiles, name) {
   if (!profiles[name]) {
     console.error(
-      `Профиль "${name}" не найден. Доступные: ${Object.keys(profiles).join(", ")}`
+      `Profile "${name}" not found. Available: ${Object.keys(profiles).join(", ")}`
     );
     process.exit(1);
   }
@@ -103,30 +103,30 @@ function switchProfile(profiles, name) {
 
   settings.model = profile.model;
 
-  // Убираем кастомные env-переменные от предыдущего профиля
+  // Remove custom env vars from previous profile
   delete settings.env.ANTHROPIC_AUTH_TOKEN;
   delete settings.env.ANTHROPIC_BASE_URL;
   delete settings.env.API_TIMEOUT_MS;
 
-  // Добавляем env-переменные нового профиля
+  // Add env vars from new profile
   if (Object.keys(profile.env).length > 0) {
     Object.assign(settings.env, profile.env);
   }
 
   writeSettings(settings);
-  console.log(`Переключено на: ${profile.model} (${name})`);
-  console.log("Перезапусти Claude Code для применения изменений.");
+  console.log(`Switched to: ${profile.model} (${name})`);
+  console.log("Restart Claude Code to apply changes.");
 }
 
 function listProfiles(profiles) {
   const settings = readSettings();
   const currentModel = settings.model;
 
-  console.log("Доступные профили:\n");
+  console.log("Available profiles:\n");
   for (const [name, profile] of Object.entries(profiles)) {
-    const active = profile.model === currentModel ? " <-- активный" : "";
+    const active = profile.model === currentModel ? " <-- active" : "";
     const api =
-      profile.env?.ANTHROPIC_BASE_URL || "Anthropic API (по умолчанию)";
+      profile.env?.ANTHROPIC_BASE_URL || "Anthropic API (default)";
     console.log(`  ${name.padEnd(6)} ${profile.model.padEnd(20)} ${api}${active}`);
   }
 }
@@ -136,16 +136,16 @@ function listProfiles(profiles) {
   const [,, command, arg] = process.argv;
 
   if (command === "help" || !command) {
-    console.log("cc-model — переключатель моделей для Claude Code\n");
-    console.log("Команды:");
-    console.log("  switch <profile>  Переключить модель (алиас: use)");
-    console.log("  status            Показать текущую модель (алиас: current)");
-    console.log("  list              Список профилей (алиас: profiles)");
-    console.log("  help              Показать эту справку");
-    console.log("\nПримеры:");
+    console.log("cc-model — Claude Code model switcher\n");
+    console.log("Commands:");
+    console.log("  switch <profile>  Switch model (alias: use)");
+    console.log("  status            Show current model (alias: current)");
+    console.log("  list              List profiles (alias: profiles)");
+    console.log("  help              Show this help");
+    console.log("\nExamples:");
     console.log("  cc-model switch opus");
     console.log("  cc-model status");
-    console.log("\nПосле switch перезапусти Claude Code.");
+    console.log("\nRestart Claude Code after switching.");
     return;
   }
 
@@ -155,7 +155,7 @@ function listProfiles(profiles) {
     case "switch":
     case "use":
       if (!arg) {
-        console.error("Укажи профиль: cc-model switch <name>");
+        console.error("Specify a profile: cc-model switch <name>");
         process.exit(1);
       }
       switchProfile(profiles, arg);
