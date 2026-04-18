@@ -1,0 +1,14 @@
+{
+  "glm": {
+    "model": "glm-5.1",
+    "env": {
+      "ANTHROPIC_AUTH_TOKEN": "токен-от-zhipuai",
+      "ANTHROPIC_BASE_URL": "https://api.z.ai/api/anthropic",
+      "API_TIMEOUT_MS": "3000000"
+    }
+  },
+  "opus": {
+    "model": "claude-opus-4-7",
+    "env": {}
+  }
+}

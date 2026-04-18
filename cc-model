@@ -1,0 +1,121 @@
+#!/usr/bin/env node
+
+const fs = require("fs");
+const path = require("path");
+
+const SETTINGS_PATH = path.join(process.env.HOME, ".claude", "settings.json");
+const PROFILES_PATH = path.join(process.env.HOME, ".cc-model", "profiles.json");
+
+function loadProfiles() {
+  if (!fs.existsSync(PROFILES_PATH)) {
+    console.error(
+      `Конфиг не найден: ${PROFILES_PATH}\nСоздай его по шаблону из profiles.example.json`
+    );
+    process.exit(1);
+  }
+  return JSON.parse(fs.readFileSync(PROFILES_PATH, "utf-8"));
+}
+
+function readSettings() {
+  return JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));
+}
+
+function writeSettings(settings) {
+  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2) + "\n");
+}
+
+function status() {
+  const profiles = loadProfiles();
+  const settings = readSettings();
+  const model = settings.model || "не указана";
+  const baseUrl = settings.env?.ANTHROPIC_BASE_URL || "Anthropic API (по умолчанию)";
+
+  let profileName = "неизвестный";
+  for (const [name, profile] of Object.entries(profiles)) {
+    if (profile.model === model) {
+      profileName = name;
+      break;
+    }
+  }
+
+  console.log(`Модель:     ${model}`);
+  console.log(`Профиль:    ${profileName}`);
+  console.log(`API:        ${baseUrl}`);
+}
+
+function switchProfile(name) {
+  const profiles = loadProfiles();
+  if (!profiles[name]) {
+    console.error(
+      `Профиль "${name}" не найден. Доступные: ${Object.keys(profiles).join(", ")}`
+    );
+    process.exit(1);
+  }
+
+  const settings = readSettings();
+  const profile = profiles[name];
+
+  settings.model = profile.model;
+
+  // Убираем кастомные env-переменные от предыдущего профиля
+  delete settings.env.ANTHROPIC_AUTH_TOKEN;
+  delete settings.env.ANTHROPIC_BASE_URL;
+  delete settings.env.API_TIMEOUT_MS;
+
+  // Добавляем env-переменные нового профиля
+  if (Object.keys(profile.env).length > 0) {
+    Object.assign(settings.env, profile.env);
+  }
+
+  writeSettings(settings);
+  console.log(`Переключено на: ${profile.model} (${name})`);
+  console.log("Перезапусти Claude Code для применения изменений.");
+}
+
+function listProfiles() {
+  const profiles = loadProfiles();
+  const settings = readSettings();
+  const currentModel = settings.model;
+
+  console.log("Доступные профили:\n");
+  for (const [name, profile] of Object.entries(profiles)) {
+    const active = profile.model === currentModel ? " <-- активный" : "";
+    const api =
+      profile.env?.ANTHROPIC_BASE_URL || "Anthropic API (по умолчанию)";
+    console.log(`  ${name.padEnd(6)} ${profile.model.padEnd(20)} ${api}${active}`);
+  }
+}
+
+// Main
+const [,, command, arg] = process.argv;
+
+switch (command) {
+  case "switch":
+  case "use":
+    if (!arg) {
+      console.error("Укажи профиль: cc-model switch <name>");
+      process.exit(1);
+    }
+    switchProfile(arg);
+    break;
+  case "status":
+  case "current":
+    status();
+    break;
+  case "list":
+  case "profiles":
+    listProfiles();
+    break;
+  case "help":
+  default:
+    console.log("cc-model — переключатель моделей для Claude Code\n");
+    console.log("Команды:");
+    console.log("  switch <profile>  Переключить модель (алиас: use)");
+    console.log("  status            Показать текущую модель (алиас: current)");
+    console.log("  list              Список профилей (алиас: profiles)");
+    console.log("  help              Показать эту справку");
+    console.log("\nПримеры:");
+    console.log("  cc-model switch opus");
+    console.log("  cc-model status");
+    console.log("\nПосле switch перезапусти Claude Code.");
+}
