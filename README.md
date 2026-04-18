@@ -1,46 +1,67 @@
-# cc-model — переключатель моделей для Claude Code
+# cc-model — Claude Code model switcher
 
-CLI-утилита для переключения между моделями в Claude Code. Меняет модель, API-эндпоинт и токен авторизации в `~/.claude/settings.json`.
+CLI tool to switch Claude Code between AI models. Modifies `~/.claude/settings.json` (model, API URL, auth token).
 
-## Установка
+## Installation
+
+**npm (recommended):**
 
 ```bash
-ln -s /path/to/cc-model-swither/cc-model /usr/local/bin/cc-model
+npm install -g github:alvisx/cc-model-swither
 ```
 
-## Использование
+**curl:**
+
+```bash
+curl -sL https://raw.githubusercontent.com/alvisx/cc-model-swither/main/install.sh | bash
+```
+
+**Manual:**
+
+```bash
+git clone https://github.com/alvisx/cc-model-swither.git
+ln -s $(pwd)/cc-model-swither/cc-model /usr/local/bin/cc-model
+```
+
+## Usage
 
 ```bash
 cc-model switch opus    # Claude Opus 4.7
 cc-model switch glm     # GLM 5.1 (ZhipuAI)
-cc-model status         # текущая модель
-cc-model list           # список профилей
+cc-model status         # current model
+cc-model list           # list profiles
 ```
 
-После переключения перезапусти сессию Claude Code.
+Restart Claude Code after switching.
 
-## Конфигурация
+## Configuration
 
-Профили хранятся в `~/.cc-model/profiles.json` (вне репозитория). Шаблон — `profiles.example.json`.
+Profiles are stored in `~/.cc-model/profiles.json` (outside the repo). On first run, the tool will prompt for the ZhipuAI API key and create the config automatically.
 
-```bash
-mkdir -p ~/.cc-model
-cp profiles.example.json ~/.cc-model/profiles.json
-# Отредактируй ~/.cc-model/profiles.json — укажи свои токены
-```
+Template: `profiles.example.json`.
 
-## Добавление нового профиля
+## Adding a new profile
 
-Добавь запись в `~/.cc-model/profiles.json`:
+Add an entry to `~/.cc-model/profiles.json`:
 
 ```json
-"имя-профиля": {
+"profile-name": {
   "model": "model-id",
   "env": {
-    "ANTHROPIC_AUTH_TOKEN": "токен",
+    "ANTHROPIC_AUTH_TOKEN": "token",
     "ANTHROPIC_BASE_URL": "https://..."
   }
 }
 ```
 
-Если модель использует стандартный Anthropic API — оставь `"env": {}`.
+For models using the default Anthropic API, set `"env": {}`.
+
+## Uninstall
+
+```bash
+# npm:
+npm uninstall -g cc-model
+
+# curl/manual:
+rm /usr/local/bin/cc-model
+```
