@@ -1,6 +1,6 @@
 # cc-model — Claude Code model switcher
 
-CLI tool to switch Claude Code between AI models. Modifies `~/.claude/settings.json` (model, API URL, auth token).
+CLI tool to switch Claude Code between AI models. Modifies `~/.claude/settings.json` (model, API URL, API key, auth token).
 
 ## Installation
 
@@ -48,13 +48,16 @@ Add an entry to `~/.cc-model/profiles.json`:
 "profile-name": {
   "model": "model-id",
   "env": {
+    "ANTHROPIC_API_KEY": "api-key",
     "ANTHROPIC_AUTH_TOKEN": "token",
-    "ANTHROPIC_BASE_URL": "https://..."
+    "ANTHROPIC_BASE_URL": "https://...",
+    "HTTPS_PROXY": "http://proxy:8080",
+    "HTTP_PROXY": "http://proxy:8080"
   }
 }
 ```
 
-For models using the default Anthropic API, set `"env": {}`.
+For models using the default Anthropic API, the `env` field can be omitted entirely.
 
 ## Uninstall
 
